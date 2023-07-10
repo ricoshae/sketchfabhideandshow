@@ -1,0 +1,190 @@
+<script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.7.1.js"></script>
+<div class="container" style="max-width:700px;">
+  <h3>3D animation using Sketchfab&nbsp;</h3>
+  <h4 id="sf_modelname"></h4>
+  <p>You can click, drag and scroll to zoom in and move around the model for a different view. </p>
+  <div>
+    <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+      <iframe style="position: absolute;top: 0; left: 0; width: 100%; height: 100%; border-color:#1d1d1d;;" src="" id="api-frame" allow="autoplay; fullscreen; vr" allowvr="" allowfullscreen="" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+    </div><br>
+    <!-- Initialize the viewer -->
+    <script type="text/javascript">
+      // -------------------------------------------------
+      // Developed by: Chris Richter chris@ricoshae.com.au
+      // -------------------------------------------------
+
+      // This code imports models from Sketchfab and allows a user to select different models from sketchfab into the viewer
+      // The code uses the Viewer API from Skethfab
+      // https://sketchfab.com/developers/viewer
+      // The code is designed to be used inside the Moodle framework
+      // if used outside the Moodle framework, you may need to import Bootstrap for the layout features
+
+      // Model references are stored in an array
+      // id - from the Sketchfab model URL
+      // title - is displayed above the model.
+      //
+      var iframe = document.getElementById('api-frame');
+      var model = [];
+      model['main'] = {
+        id: '3b3a1f7654a5447eb25c9845152cfc89',
+        title: 'Chip Packets',
+        slider: true
+      };
+
+
+      var camerapos;
+      var modelname = "Model name"; // used as variable for the current selected model
+
+      // By default, the latest version of the viewer API will be used.
+      var client = new Sketchfab(iframe);
+
+      // Load a sketchfab model
+      function loadmodel(id) {
+        // Dispaly model name
+        client.init(id, {
+          ui_inspector: 0,
+          ui_vr: 0,
+          success: function onSuccess(api) {
+            api.start();
+            api.addEventListener('viewerready', function() {
+
+            });
+          }
+        })
+      }
+
+      var allmaterials; // all materials for the current loaded module are stored here to reference model layers name and id
+      client.init(model['main'].id, {
+        ui_inspector: 0,
+        ui_vr: 0,
+        success: function onSuccess(api) {
+          //   document.getElementById('sf-tn-description').innerHTML = 'Dog body'; // slider description					// add listeners to buttons
+          document.getElementById('model-btn-1').addEventListener('click', function() {
+
+            hidematerial('Lays - Flaming_Hot', api);
+            showmaterial('Lays - Chile_Limon', api);
+          });
+          document.getElementById('model-btn-2').addEventListener('click', function() {
+
+            showmaterial('Lays - Flaming_Hot', api);
+            hidematerial('Lays - Chile_Limon', api);
+          });
+
+          document.getElementById('model-btn-3').addEventListener('click', function() {
+
+            hidematerial('Lays - Flaming_Hot', api);
+            hidematerial('Lays - Chile_Limon', api);
+          });
+
+          document.getElementById('model-btn-4').addEventListener('click', function() {
+
+            showmaterial('Lays - Flaming_Hot', api);
+            showmaterial('Lays - Chile_Limon', api);
+          });
+          //   document.getElementById('sf_modelname').innerHTML = modelname; // model name
+          api.start();
+          api.addEventListener('viewerready', function() {
+
+            var html = "";
+            // API is ready to use
+            // Get initial material list for the model
+            api.getMaterialList(function(err, materials) {
+              if (!err) {
+                allmaterials = materials;
+                const divs = document.querySelectorAll('.apirb');
+                // attach change listener to radio buttons to load models
+                divs.forEach(el => el.addEventListener('change', function() {
+                  // if 'reet' then recentre the model
+                  if (this.value == 'reset') {
+                    resetmodel();
+                  } else {
+                    // otherwise  - load the model into the view
+                    modelname = "You are looking at the " + model[this.value].title;
+                    loadmodel(model[this.value].id);
+                  }
+                }));
+                // display all materials for reference - comment out for production
+                console.log(materials);
+              }
+            });
+            // reset camera view
+            function resetcamera() {
+              api.recenterCamera(function(err) {
+                // console.log(err);
+              });
+
+            }
+          });
+
+        },
+        error: function onError() {
+          // console.log('Viewer error');
+        }
+      });
+
+      function hidematerial(materialname, api) {
+        var materialToUpdate = allmaterials[getmaterialbyname(materialname)];
+        materialToUpdate.channels.Opacity.enable = true;
+        materialToUpdate.channels.Opacity.factor = 0;
+        api.setMaterial(materialToUpdate);
+      }
+
+      function showmaterial(materialname, api) {
+        var materialToUpdate = allmaterials[getmaterialbyname(materialname)];
+        materialToUpdate.channels.Opacity.enable = true;
+        materialToUpdate.channels.Opacity.factor = 1;
+        api.setMaterial(materialToUpdate);
+      }
+
+      // -------  START EXTRA FUNCTIONS ----------
+      // Reset to 0 on reload
+      // add a class to an element
+      function addClass(id, classname) {
+        var element = document.getElementById(id);
+        element.classList.add(classname);
+      }
+      // remove a class from an element
+      function removeClass(id, classname) {
+        var element = document.getElementById(id);
+        element.classList.remove(classname);
+      }
+      // get material id by name
+      function getmaterialbyname(name) {
+        for (var i = 0; i < allmaterials.length; i++) {
+          if (allmaterials[i].name === name) {
+            return i;
+          }
+        }
+        return null; // return null if material is not found
+      }
+
+
+      // -------  END EXTRA FUNCTIONS ----------
+
+    </script>
+  </div>
+  <div class="row">
+    <div class="col-3">
+      <button value="male" name="r1" id="model-btn-1">
+        Hide packet 1, show Packet 2</button>
+    </div>
+    <div class="col-3">
+      <button value="female" name="r1" id="model-btn-2">
+        Hide packet 2, Show Packet 1</button>
+    </div>
+    <div class="col-3">
+      <button value="female" name="r1" id="model-btn-3">
+        Hide both 1 and 2</button>
+    </div>
+    <div class="col-3">
+      <button value="female" name="r1" id="model-btn-4">
+        Show both 1 and 2</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-3">
+      <button class="apirb" value="reset" id="resetmodel">
+        Reset model</button>
+    </div>
+  </div>
+</div>
